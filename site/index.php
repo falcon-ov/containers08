@@ -3,22 +3,19 @@ require_once __DIR__ . '/modules/database.php';
 require_once __DIR__ . '/modules/page.php';
 require_once __DIR__ . '/config.php';
 
-$db = new Database($config["db"]["path"]);
-$page = new Page(__DIR__ . '/templates/index.tpl');
+try {
+    $db = new Database($config["db"]["path"]);
+    $page = new Page(__DIR__ . '/templates/index.tpl');
 
-// Получаем ID страницы из GET-запроса, по умолчанию 1
-$pageId = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $pageId = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $data = $db->Read("page", $pageId);
 
-// Читаем данные из базы
-$data = $db->Read("page", $pageId);
+    if (empty($data)) {
+        $data = ["title" => "Page Not Found", "content" => "The requested page does not exist."];
+    }
 
-// Если данные не найдены, возвращаем заглушку
-if (!$data) {
-    $data = [
-        'title' => 'Page Not Found',
-        'content' => 'The requested page does not exist.'
-    ];
+    echo $page->Render($data);
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
 }
-
-// Рендерим страницу
-echo $page->Render($data);
+?>

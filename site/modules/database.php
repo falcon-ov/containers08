@@ -1,55 +1,89 @@
 <?php
 class Database {
-    private $db;
+    private $pdo;
 
     public function __construct($path) {
-        $this->db = new PDO("sqlite:$path");
-        $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        try {
+            $this->pdo = new PDO("sqlite:" . $path);
+            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            throw new Exception("Database connection failed: " . $e->getMessage());
+        }
     }
 
     public function Execute($sql) {
-        $this->db->exec($sql);
+        try {
+            $this->pdo->exec($sql);
+            return true;
+        } catch (PDOException $e) {
+            return false;
+        }
     }
 
     public function Fetch($sql) {
-        $stmt = $this->db->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->pdo->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
     }
 
     public function Create($table, $data) {
-        $columns = implode(", ", array_keys($data));
-        $placeholders = ":" . implode(", :", array_keys($data));
-        $sql = "INSERT INTO $table ($columns) VALUES ($placeholders)";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($data);
-        return $this->db->lastInsertId();
+        try {
+            $columns = implode(", ", array_keys($data));
+            $placeholders = ":" . implode(", :", array_keys($data));
+            $sql = "INSERT INTO $table ($columns) VALUES ($placeholders)";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($data);
+            return $this->pdo->lastInsertId();
+        } catch (PDOException $e) {
+            return false;
+        }
     }
 
     public function Read($table, $id) {
-        $stmt = $this->db->prepare("SELECT * FROM $table WHERE id = :id");
-        $stmt->execute(['id' => $id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM $table WHERE id = :id");
+            $stmt->execute(["id" => $id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+        } catch (PDOException $e) {
+            return [];
+        }
     }
 
     public function Update($table, $id, $data) {
-        $set = [];
-        foreach ($data as $key => $value) {
-            $set[] = "$key = :$key";
+        try {
+            $set = [];
+            foreach (array_keys($data) as $key) {
+                $set[] = "$key = :$key";
+            }
+            $set = implode(", ", $set);
+            $sql = "UPDATE $table SET $set WHERE id = :id";
+            $data["id"] = $id;
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute($data);
+        } catch (PDOException $e) {
+            return false;
         }
-        $set = implode(", ", $set);
-        $sql = "UPDATE $table SET $set WHERE id = :id";
-        $data['id'] = $id;
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($data);
     }
 
     public function Delete($table, $id) {
-        $stmt = $this->db->prepare("DELETE FROM $table WHERE id = :id");
-        $stmt->execute(['id' => $id]);
+        try {
+            $stmt = $this->pdo->prepare("DELETE FROM $table WHERE id = :id");
+            return $stmt->execute(["id" => $id]);
+        } catch (PDOException $e) {
+            return false;
+        }
     }
 
     public function Count($table) {
-        $stmt = $this->db->query("SELECT COUNT(*) FROM $table");
-        return $stmt->fetchColumn();
+        try {
+            $stmt = $this->pdo->query("SELECT COUNT(*) FROM $table");
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            return 0;
+        }
     }
 }
+?>
