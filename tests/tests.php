@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/testframework.php';
-require_once __DIR__ . '/../site/modules/database.php';
-require_once __DIR__ . '/../ site/templates/index.tpl';
+require_once __DIR__ . '/../modules/database.php';
+require_once __DIR__ . '/../modules/page.php';
 
 $test = new TestFramework();
 
@@ -58,7 +58,7 @@ $test->addTest("Database Delete", function() {
 
 // Test Page rendering
 $test->addTest("Page Render", function() {
-    $templatePath = __DIR__ . '/../site/templates/index.tpl';
+    $templatePath = __DIR__ . '/../templates/index.tpl';
     $page = new Page($templatePath);
     $data = ["title" => "Test Page", "content" => "Test Content"];
     $output = $page->Render($data);
