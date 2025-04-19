@@ -19,6 +19,8 @@ jobs:
         run: docker cp ./tests container:/var/www/html
       - name: Up the container
         run: docker start container
+      - name: Debug file structure
+        run: docker exec container ls -R /var/www/html
       - name: Run tests
         run: docker exec container php /var/www/html/tests/tests.php
       - name: Stop the container
