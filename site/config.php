@@ -4,3 +4,4 @@ $config = [
         "path" => "/var/www/db/db.sqlite"
     ]
 ];
+?>

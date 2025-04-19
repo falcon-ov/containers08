@@ -59,10 +59,18 @@ $test->addTest("Database Delete", function() {
 // Test Page rendering
 $test->addTest("Page Render", function() {
     $templatePath = __DIR__ . '/../templates/index.tpl';
+    if (!file_exists($templatePath)) {
+        throw new Exception("Template file not found: $templatePath");
+    }
     $page = new Page($templatePath);
     $data = ["title" => "Test Page", "content" => "Test Content"];
     $output = $page->Render($data);
-    return strpos($output, "Test Page") !== false && strpos($output, "Test Content") !== false;
+    $titleFound = strpos($output, $data["title"]) !== false;
+    $contentFound = strpos($output, $data["content"]) !== false;
+    if (!$titleFound || !$contentFound) {
+        throw new Exception("Rendered output missing expected content. Title found: $titleFound, Content found: $contentFound, Output: $output");
+    }
+    return true;
 });
 
 $test->run();

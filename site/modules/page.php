@@ -3,13 +3,19 @@ class Page {
     private $template;
 
     public function __construct($template) {
-        $this->template = $template;
+        if (file_exists($template)) {
+            $this->template = file_get_contents($template);
+        } else {
+            throw new Exception("Template file not found: $template");
+        }
     }
 
     public function Render($data) {
-        ob_start();
-        extract($data);
-        include $this->template;
-        return ob_get_clean();
+        $output = $this->template;
+        foreach ($data as $key => $value) {
+            $output = str_replace("{{{$key}}}", $value, $output);
+        }
+        return $output;
     }
 }
+?>
